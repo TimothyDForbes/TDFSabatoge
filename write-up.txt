@@ -1,0 +1,139 @@
+1st -> Demo Game
+
+----------------------------------Code Changes----------------------------------
+[open old SabatogeB]
+This is rather un optimized code, what struck me first was all the repeat functions:
+    rotateLeft & rotateRight,
+    moveChopper1 & moveChopper2, 
+    moveTrooper1 & moveTrooper2, 
+    animateTroop0 1 2 & 3,
+    moveSprite1 moveSprite2 & bigExplosion,
+But before making any changes I thought what else would be best optimized...
+Something that really bothered me was all the timers/intervals.
+
+So I began with consolodating all of them into one interval. I did this by using two 
+lists, one to hold all the functions that were being called by the intervals, and one
+to hold the timings for each of them. 
+
+                    global_functions & global_Thresholds
+
+Great now we can have one interval that triggers at some rate:         global_tickrate
+and it will call all the functions that the intevals did, and so timed in a similar way.
+
+But theres actually a third leg to this scheme I've hatched here in the code, and that has
+to do with how we actually have these functions do anything with the elements of the game.
+We have to associate the functions with the game elements somehow. So I put them all in a list:
+
+                            global_entity_list
+
+The only reliable way I thought of associating them with a function was using html attributes, 
+and so I started with tying elements to functions with classes:
+
+    --->for each class that an html element has (entity of the global_entity_list) we
+        can check and see if theres a function defined for it in global_class_functions,
+        and then if there is we can call it using that entity to create the game behaviour 
+        we want.  
+        
+        for example: rotate the turret, move the commandos down, or move the helicopters
+
+Ok stick with me here, theres one last piece to this game loop we're crafting: timing.
+
+    As I mentioned before not all the intervals happened at the same rate in the OG code,
+    and itd make for a very poor game too if they did (everything happening at the same speed). 
+    And we did make global_classthresholds,
+    but using it to alter when we call the classfunctions for each entity is the final problem.
+
+    I solved it by using the value attribute of html elements, having it start at 0 then every
+    gametick of our one interval have it be incremented by 1 (for each entity), and if the value
+     is greater or equal to the threshold... we call its function. And of course by having all
+     the class functions reset the value of the entity called with them back to zero, to reset.
+
+So thats probably the biggest change I made to the code, but it enabled me to condense it alot.
+We have all the logic associated with html elements in global_class_functions, and then I also
+made some functions apart from that, that get called by the functions in the global_class_functions.
+
+            !!!!!!!! Best part about this approach (of only having a single interval), is: PAUSING
+
+I incoorperated the keyboard event handling into this approach by having the keyboard events change 
+values in a global array and then referencing that array every tick instead of the events directly.
+All the event handling occurs seperate from the main gameloop logic, and so handles pretty well.
+I change the turret rotation & fire bullets through classfunctions.
+
+The other big optimization that I did was abstract bullets/commandos/helis/animatedSprites/Sounds to 
+generic css classes, and then add/remove html elements with those to the document (and the global_entity_list). 
+
+                see createCommando createExplosion createBullet
+
+I got this all to work by liberally using jqueries .attr() function to set and retrieve data from the elements/entities. 
+
+        like "data-status" in commandos for if they're falling, chuted, or safe.. 
+        like "data-status" in helis for if they're preparing waiting starting or flying
+        or like "data-angle" for bullets so we know which way to move them.
+
+along these lines instead of having dedicated html elements defined for each sound we might want to play, I instead opted for
+adding the sounds to the document and at the same time create a callback to delete them after the sound has played.
+
+                see playSound(name, duration)
+
+The animated class is a fun one, since I actually just added it so we can use it in global_class_functions, but it
+works by referencing data set for each element using .attr() like "data-frame-width" or "data-total-frames"
+
+I basically moved everything I could from global lists to attributes of html elements, and that combined with the one
+global interval is how I optimized the code.
+
+----------------------------------Sprite Changes----------------------------------
+I wanted to change the theme radically, and I settled on shooting aliens. Long before
+New Jersey before anyone asks. I really enjoy spriting, and you can probably see that.
+I started with the commandos and the helis, and then once I decided the lore a bit more,
+sprited the background and turret. Then finally the animated explosions. I think I replaced
+everything, All the art is orginal work done by me, I used paint.net primarily... 
+which is great software, very useful once you get to know it.
+
+I could for a bit go into my spriting process [show some pdn files?] ask the room maybe
+
+----------------------------------Audio Changes----------------------------------
+I had alot of fun with the audio changes, I have some experience making audio for games believe
+it or not. For this game I basically had a rough imagining of what I wanted each thing to sound like.
+Then I scoured the internet for something approximate: mainly freesound.org, great reasource for
+liscense free sounds.
+    The helis are actually a cat's purr deepened and reverbed.
+    The turret is a civil war cannon.
+    and the aliens I think is just a generic alien sound, with a alki setlzer hitting the bottom of a glass at the start for impact
+    the explosion I found timed about the same, and once I heard it it actually inspired me to do the two stage explosions
+
+----------------------------------Main Page Changes----------------------------------
+The real objective was passing the scores to the SabatogeC.html page, I did that with session variables. Something I
+learned about in Serverside programming actually. I added time to the scoring just for fun as well.
+
+I also added some other stuff to the game, just for fun. 
+
+        Like a foreground element, and sun element for aesthetics, everything has a shadow now including the barrel.
+        Debris for when the helicopters get exploded just because I thought it'd be fun.
+        And a mothership out there in the background with tractor beams, since the aliens had to slow down for some reason right?
+
+    The implementation of each of those is a pretty large tangent themselves, maybe I'll save that for questions later?
+
+----------------------------------Summary Page Changes----------------------------------
+This I made actually pretty early on. I knew I wanted a military theme, so created the document with papers to fit.
+I added some jquery to move the page around with the mouse position since I thought it might make you feel like you're
+handling a document or something. The biggest obstacle was getting the tallying up of the numbers to work right.
+I wanted it to go up from 0 and add up to the target number, and I decieded going through every single number would
+work fine as long as I altered the time between each increment well. 
+
+                    See getPortion()  <--- the math to find the time took me alot of tinkering, and I acutally ended up using 
+                    a graphing calculator so I could play with the function enough to get it to behave.
+
+Last thing I added was a letter grade, since I imagined itd fit the paper theme. and its just fun.
+
+----------------------------------Splash Page Changes----------------------------------
+This I actually did last out of everything in the project, last night believe it or not. :o)
+I copied it over from SabatogeC, and adapted it to fit the requirements. It worked out well I think.
+
+
+----------------------------------Friends & Family-------------------------------------
+I showed it to my brother periodically throughout its development, and he was thuroughly entertained all in all.
+Talking to someone about it gave me alot of ideas, he really thought my art was cool. But truthfully wasn't too
+enthralled by the gameplay. He did say the new sounds/explosions/debris made it more fun to shoot the helicopters
+
+Questions?
+

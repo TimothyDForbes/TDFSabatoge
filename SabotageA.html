@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Sabotage Game</title>
+		<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Special+Elite&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
+		<style>
+			body {			background-color:	rgb(38, 36, 35); }
+			#box1 {			position: 			relative;
+							top: 				0px;
+							left: 				0px;
+							width: 				800px;
+							height: 			600px;
+							display: 			block;
+							margin: 			0px auto;
+							padding: 			0px;
+							background-color: 	black;
+							overflow:			hidden; }
+			p {				color: 				black;
+							text-align: 		left;
+							font-size: 			0.8em;
+							font-family: 		'Special Elite', serif;}
+			button {		width: 				315px;
+							display: 			block;
+							margin: 			0px auto;
+							padding: 			3px;
+							border: 			5px solid black;
+							background-color: 	white;
+							color: 				black;
+							font-size: 			2em;
+							font-family: 		'Special Elite', serif; }
+			button:hover {	border: 			5px solid red;
+							color: 				red; }
+			#folder		{	background-color: rgb(220, 211, 137);
+							padding: 2%;
+							padding-top: 5%;
+							transform: rotate(4deg);
+							position: 			absolute;
+							width: 90%;
+							height: 80%;
+							top: 47px;
+							left: 16px;
+							border-radius: 5px;
+							perspective: 107px;
+							perspective-origin: 20% -8%;}
+			#folderTab {	background-color: rgb(220, 211, 137);
+							transform: rotateX(42deg) rotateY(0deg);
+							transform-style: preserve-3d;
+							width: 30%;
+							height: 10%;
+							position: 			absolute;
+							top: -6%;
+							left: 5%;
+							border-radius: 5px;
+							z-index: -10;}
+			.page { 		position: 			absolute;
+							width:96%;
+							height: 93%;
+							background-color: rgb(247, 243, 236);
+							box-shadow: 11px -3px 16px -7px rgba(0, 0, 0, 0.239);
+							z-index: -1;
+							top: 30px}
+			.infoPage{		position: 			relative;
+							padding: 2.5%;
+							background-color: rgb(247, 243, 236);
+							font-family: 		'Special Elite', serif;
+							box-shadow: 11px -3px 16px -7px rgba(0, 0, 0, 0.259);
+							z-index: 2;}
+			h2			{	font-size: 48px;
+							text-align: center;
+							margin-bottom: 0px;}
+			.paperclip {	position: 			absolute;
+							width: 276px;
+							height: 1190px;
+							top: -544px;
+							left: 229px;
+							transform: scale(10%) rotateZ(-13deg);}
+			#pc0{	position: 			absolute;
+					background-image: url(./images/paperclip0.png);
+					z-index: 100;
+					height: 1190px;}
+			#pc1{	position: 			absolute;
+					background-image: url(./images/paperclip1.png);
+					z-index: 1;
+					height: 1190px;}
+			#photo {	position: absolute;
+						width: 425px;
+						height: 160px;
+						left:326px;
+						top:-4px;
+						background-color: white;
+						z-index: 2;
+						transform: rotateZ(-4deg);
+						box-shadow: 11px 15px 35px -8px rgba(0,0,0,18%);}
+			#HeliImage {background-image: url(./images/mothership.png);
+						width:	227px;
+						height: 65px;
+						background-position: 0px 0px;
+						background-color: rgb(43, 40, 30);
+						position: relative;
+						margin-top: 5px;
+						top: 27px;
+						left: 100px;
+						z-index:10;
+						image-rendering: pixelated;
+						transform: scale(177%);
+						display:inline-block;}
+			#funnyImageWidthPadding {
+						margin:	auto;
+						z-index:-1;
+						height:85%;
+						top:5px;
+						width: 142px;
+						position:relative;
+						background-color: rgb(58, 106, 145);}
+			#handwritting {color: rgb(19, 19, 80);
+						font-size:13px;
+						font-family: "Reenie Beanie";
+						position:relative;
+						top: 37px;
+						left: 64px;
+						width: 400px;
+						transform: rotate(1deg);}
+			#topSecretBorder{
+						padding:2.5%;
+						margin: 5%;
+						border: dashed 5px red;}
+			#TOPSECRET {left:19.6%;
+						top:18px;
+						position:absolute;
+						color: red;
+						background-color:rgb(247, 243, 236);
+						font-size: 4em;
+						font-family: "Black Ops One", system-ui;}
+			#printoutPage{position: absolute;
+						width: 400px;
+						height: 417px;
+						background-color:#f8fdff;
+						padding-left: 2.5%;
+						padding-right: 2.5%;
+						z-index: 1;
+						top: 38px;
+						left:3%;
+						padding: 5%;
+						transform: rotate(1.8deg);}
+			#printout {border-left: dashed 1px lightgray;
+						border-right: dashed 1px lightgray;
+						height: 100%;}
+			#alien{		background-image: url("./images/commandoSprite.png");
+						background-position: 20px;
+						width: 20px;
+						height: 40px;
+						overflow: hidden;
+						left: 15%;
+						position: relative;
+						image-rendering: pixelated;
+						transform: scale(450%);
+						display: inline-block;}
+			#chopper {	background-image: url("./images/chopper1.png");
+						width: 80px;
+						height: 40px;
+						overflow: hidden;
+						left: 15%;
+						position: relative;
+						image-rendering: pixelated;
+						transform: scale(250%);
+						display: inline-block;}
+			h1 {		font-family: 'Special Elite', serif;
+						display: inline-block;
+						position: relative;
+						left: 31%;}
+			#space {	width:20px;
+						display:inline-block}
+			#chopperinfos {	top:79px;
+							left: 10%;
+							position: relative;
+							display: inline-block;}
+			#chopperpts {	left:48%;
+							position: relative;
+							display: inline-block;}
+			#startGame {	top:105px;
+							left:45px;
+							display: inline-block;
+							position: relative;}
+			#credits{		position: relative;
+							width: 182px;
+							height: 69%;
+							top: 25%;
+							left: 69%;
+							margin: 5px;
+							padding: 10px;
+							color: gray;
+							font-family: 'Special Elite', serif;
+							border: gray dashed 1px;}
+			#credits p {	color: gray;}
+			#credits h2 {	color: gray;
+							font-size: 2em;}
+			#controls	{	top:100px;
+							left:15%;
+							font-size: 1em;
+							position: relative;}
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+		<script>
+			function nextpage(page){
+				switch (page){
+					case 1:
+						$("#page0").animate({opacity: 0}, 1000)
+						setTimeout(()=>$("#page0").css("visibility","hidden"), 1001);
+						break;
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div id="box1">
+			<div id="folder">
+				<div id="photo"><div id="HeliImage"></div><p id="handwritting">One of the Grey's "motherships"<span id="space"></span>---Loaded with "transports"<br><span id="space"></span>Known to be equipped with a tractor beam</p></div>
+				<div class="paperclip" id="pc0" ></div>
+				<div id="pc1" class="paperclip"></div>
+				<div id="folderTab"></div>
+				<div class="page" style="transform: rotate(-1deg)"></div>
+				<div class="page" style="transform: rotate(0deg)"></div>
+				<div class="page" style="transform: rotate(1deg)"></div>
+				<div class="page" style="transform: rotate(-2deg)">
+					<div id="credits">
+						<h2>SABATOGE</h2>
+						<p>							
+							&nbsp;&nbsp;By:&nbsp;&nbsp;Timothy Forbes<br>
+							<br>
+							Final Project For CSCI 2442 – Saint Paul College<br>							
+							<br>
+							November - December 2024<br>
+							<br>
+							All images and animations are original work done by Timothy Forbes, sounds sourced from freesound.org and modified by Timothy Forbes.<br>
+							<br>
+							The code was adapted from a recreation done by Darren Pearson as part of the CSCI 2442 course, a nearly complete re-write was done by Timothy Forbes and is original work.<br>
+						</p>
+					</div>
+				</div>
+				<div id="printoutPage"><div id="printout">
+					<span>
+						<div id="alien"></div>
+						<h1>5 PTS</h1>
+					</span><br>
+					<span id="chopperinfos">
+						<div id="chopper"></div>
+						<h1 id="chopperpts">25 PTS</h1>
+					</span><br>
+					<p id="controls">WASD or ←↓↑→ to move <br><br>
+						&nbsp;&nbsp;SPACE to fire</p>
+					<a id="startGame" href="SabotageB.html"><button type="button">START MISSION</button></a>
+				</div></div>
+				<div id="page0" class="infoPage"><span id="TOPSECRET">TOP SECRET</span><div id="topSecretBorder">
+					<h2>MISSION BRIEFING</h2>
+					<p>
+						Humanity has been exploring space for decades,<br>
+						<br>
+						Hidden technologies since the 1950s have enabled a secret block of 1st world countries to enact and execute 
+						the greatest adventure humanity has yet faced:&nbsp;&nbsp;&nbsp;&nbsp;thousands of habital worlds,<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;hundreds of billions human lives,<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and threats.. <br>
+						<br>
+						Your mission? Defend a mission critical radar outpost on the edge of human space. Humanities' greatest foe..<br>
+						The greys have betrayed information which would allow us to located their homeworld, and end the cataclism amongst<br>
+						the stars... once and for all...<br>
+						<br>
+						If you can grant us the time for the message to get out to the rest of humnanity..<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;Blast those cretins back to the 9th hell from which they spawned soldier.
+					</p>
+					<a onclick="nextpage(1)"><button type="button">Continue Brief -></button></a>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Sabotage Game</title>
+		<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Special+Elite&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
+		<style>
+			body {			background-color:	rgb(38, 36, 35); }
+			#box1 {			position: 			relative;
+							top: 				0px;
+							left: 				0px;
+							width: 				800px;
+							height: 			600px;
+							display: 			block;
+							margin: 			0px auto;
+							padding: 			0px;
+							background-color: 	black;
+							overflow:			hidden; }
+			p {				color: 				black;
+							text-align: 		left;
+							font-size: 			2em;
+							font-family: 		'Special Elite', serif;}
+			button {		width: 				200px;
+							height: 			60px;
+							display: 			block;
+							margin: 			0px auto;
+							padding: 			0px;
+							border: 			5px solid black;
+							background-color: 	white;
+							color: 				black;
+							font-size: 			2em;
+							font-family: 		'Special Elite', serif; }
+			button:hover {	border: 			5px solid red;
+							color: 				red; }
+			#folder		{	background-color: rgb(220, 211, 137);
+							padding: 2%;
+							padding-top: 5%;
+							transform: rotate(90deg);
+							position: 			absolute;
+							width: 90%;
+							top: 540px;
+							left: -187px;
+							border-radius: 5px;
+							perspective: 107px;
+							perspective-origin: 20% -8%;}
+			#folderTab {	background-color: rgb(220, 211, 137);
+							transform: rotateX(42deg) rotateY(0deg);
+							transform-style: preserve-3d;
+							width: 30%;
+							height: 10%;
+							position: 			absolute;
+							top: -6%;
+							left: 5%;
+							border-radius: 5px;
+							z-index: -10;}
+			.page { 		position: 			absolute;
+							width:96%;
+							height: 93%;
+							background-color: rgb(247, 243, 236);
+							box-shadow: 11px -3px 16px -7px rgba(0, 0, 0, 0.239);
+							z-index: -1;
+							top: 30px}
+			#infoPage{		position: 			relative;
+							padding: 2.5%;
+							background-color: rgb(247, 243, 236);
+							font-family: 		'Special Elite', serif;
+							box-shadow: 11px -3px 16px -7px rgba(0, 0, 0, 0.259);
+							z-index: 2;}
+			h2			{	font-size: 48px;
+							text-align: center;}
+			.paperclip {	position: 			absolute;
+							width: 276px;
+							height: 1190px;
+							top: -510px;
+							left: -66px;
+							transform: scale(10%) rotateZ(13deg);}
+			#pc0{	position: 			absolute;
+					background-image: url(./images/paperclip0.png);
+					z-index: 100;
+					height: 1190px;}
+			#pc1{	position: 			absolute;
+					background-image: url(./images/paperclip1.png);
+					z-index: 1;
+					height: 1190px;}
+			#photo {	position: absolute;
+						width: 155px;
+						height: 176px;
+						left:20px;
+						background-color: white;
+						z-index: 3;
+						transform: rotateZ(-4deg);
+						box-shadow: 11px 15px 35px -8px rgba(0,0,0,18%);}
+			#CommandoImage {background-image: url(./images/commandoSprite.png);
+						width:20px;
+						height: 30px;
+						background-position: -20px -10px;
+						background-color: rgb(0, 238, 255);
+						position: relative;
+						margin: auto;
+						top: 53px;
+						z-index:10;
+						image-rendering: pixelated;
+						transform: scale(450%);
+						display:block;}
+			#funnyImageWidthPadding {
+						margin:	auto;
+						z-index:-1;
+						height:77%;
+						top:5px;
+						width: 142px;
+						position:relative;
+						background-color: rgb(0, 238, 255);}
+			#handwritting {color: rgb(40, 40, 255);
+						font-size:13px;
+						font-family: "Reenie Beanie";
+						position:relative;
+						top: -8px;
+						left: 2px;
+						width: 174px;
+						transform: rotate(-4deg);}
+			#topSecretBorder{
+						padding:2.5%;
+						margin: 5%;
+						border: dashed 5px red;}
+			#TOPSECRET {left:19.6%;
+						top:18px;
+						position:absolute;
+						color: red;
+						background-color:rgb(247, 243, 236);
+						font-size: 4em;
+						font-family: "Black Ops One", system-ui;}
+			#printoutPage{position: absolute;
+						width: 400px;
+						height: 500px;
+						background-color:#f8fdff;
+						padding-left: 2.5%;
+						padding-right: 2.5%;
+						z-index: 1;
+						top: 12px;
+						left:33%;
+						transform: rotate(-1.2deg);
+						}
+			#printout {border-left: dashed 1px lightgray;
+						border-right: dashed 1px lightgray;
+						height: 100px;}
+			.stamp	{	position: absolute;
+						width: 343px;
+						height: 327px;
+						background-image: url(./images/stamp_s.png);
+						top:312px;
+						left:348px;
+						z-index: 1000;
+						opacity: 0;
+						pointer-events: none;}
+
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+		<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+		<script>
+			$.fn.animateRotate = function(angle, duration, easing, complete) {
+			var args = $.speed(duration, easing, complete);
+  			var step = args.step;
+  			return this.each(function(i, e) {
+    			args.complete = $.proxy(args.complete, e);
+    			args.step = function(now) {
+      			$.style(e, 'transform', 'rotate(' + now + 'deg)');
+      			if (step) return step.apply(e, arguments);
+    		};
+
+    		$({deg: 0}).animate({deg: angle}, args);
+  			});
+		};
+
+			var heliKills;
+			var commandoKills;
+			var shotsFired;
+			var mouseOverBox1;
+			var animating;
+			var hitsTally;
+			var shotsTally;
+			var timeSpent;
+
+			function initializeSummary() {
+				mouseOverBox1 = false;
+				animating = false;
+				hitsTally = 0;
+				shotsTally = 0;
+				heliKills = sessionStorage.getItem("heliKills") != Infinity ? sessionStorage.getItem("heliKills") : 0;
+				commandoKills = sessionStorage.getItem("commandoKills") != Infinity ? sessionStorage.getItem("commandoKills") : 0;
+				shotsFired = sessionStorage.getItem("shotsFired") != Infinity ? sessionStorage.getItem("shotsFired") : 0;
+				timeSpent = sessionStorage.getItem("timeSpent") != Infinity ? sessionStorage.getItem("timeSpent") : 0;
+				hoursSpent = Math.floor(timeSpent / 3600000);
+				minutesSpent = Math.floor((timeSpent % 3600000) / 60000);
+				secondsSpent = Math.floor((timeSpent % 60000) / 1000);
+				animating = true;				
+				document.addEventListener("mousemove", handleMouseMove);
+				setTimeout(preformScoreAnimations, 600);
+				$("#folder").animate({ left: "20px", top: '100px'}, { duration: 400, specialEasing: { top: "linear", transform: "swing"} })
+				.animate({ left: "25px", top: '-8px'}, { duration: 50, specialEasing: { top: "linear", transform: "swing"} });
+			$("#folder").animateRotate(352, 450, 'swing', function (){}).animateRotate(352, 450, 'swing', function (){});
+			}
+			
+			function handleMouseMove(event){
+					if(!mouseOverBox1 || animating){return}
+					$("#folder").css("top", 56-(156*event.clientY/screen.height));
+					$("#folder").css("left", 60-(50*event.clientX/screen.width));
+			}
+			
+			function m_entered(){mouseOverBox1=true;}
+			
+			function m_leave(){	mouseOverBox1=false	}
+			
+			function tallyUp(element, value, targetValue, time, sound, outputtoelement=false){
+				if(targetValue == 0){
+					element.html(0);
+					return;
+				}
+				element.html(value+1);
+				if(element.attr("id")=="hitsZone"){hitsTally++};
+				if(element.attr("id")=="shotsZone"){shotsTally++};
+				if(outputtoelement){
+					var valued = parseFloat(hitsTally / shotsTally);
+					$("#ratioZone").html((valued.toFixed(4)*100).toFixed(2));
+				}
+				var timeSlice = getPortion(time, targetValue, value);
+				if(timeSlice < 10){
+					if(value % 12 == 0){playSound("chhh", 300)}
+				}else{
+					playSound("chhh", 300);
+				}
+				if(value+1 != targetValue){ 
+					setTimeout(tallyUp, timeSlice, element, value+1, targetValue, time, sound, outputtoelement);
+				}
+			}
+			
+			function getPortion(T, V, I, alpha = 0.1) {
+    			let sum = 0;
+    			let portions = [];
+    
+    			// Calculate e^(alpha * i) for each i and the sum of all these values
+    			for (let i = 1; i <= V; i++) {
+        			let exponentialTerm = Math.exp(alpha * i);
+        			portions.push(exponentialTerm);
+        			sum += exponentialTerm;
+   				 }
+
+    			// Now calculate the portion for the specific I
+   				let portionValue = (portions[I - 1] / sum) * T;
+
+   				return portionValue;
+			}
+
+			
+			function preformScoreAnimations(){
+				animating = false;
+				tallyUp($("#heliZone"), 0, heliKills, 3000, "bulletSound"); //helis
+				setTimeout(tallyUp, 3100,$("#commandoZone"), 0, commandoKills, 3000, "bulletSound"); //Commandos
+				setTimeout(tallyUp, 6250,$("#hitsZone"), 0, parseInt(heliKills)+parseInt(commandoKills), 4500, "bulletSound"); //hits
+				setTimeout(tallyUp, 6300,$("#shotsZone"), 0, shotsFired, 5500, "bulletSound", true); //shots
+				setTimeout(tallyUp, 12500, $("#minZone"), 0, minutesSpent, 6000, "bulletSound"); //time
+				setTimeout(tallyUp, 12500, $("#secondsZone"), 0, secondsSpent, 6000, "bulletSound"); //time
+				setTimeout(tallyUp, 12500, $("#hoursZone"), 0, hoursSpent, 6000, "bulletSound"); //time
+				setTimeout(tallyUp, 19000, $("#totalZone"), 0, heliKills*25+commandoKills*5, 6000, "bulletSound"); //Score
+				setTimeout(STAMP, 26500);
+				
+			}
+
+			function STAMP(){
+				playSound("stampum", 1000);
+				$(".stamp").css("background-image", "url(./images/stamp_"+getRank(heliKills*25+commandoKills*5)+".png)");
+				$(".stamp").css("opacity", 0.75);
+			}
+
+			function getRank(input_number){
+				switch(true){
+					case (input_number >= 0 && input_number< 299):
+						return "f";
+						break;
+					case (input_number >= 300 && input_number<599):
+						return "d";
+						break;
+					case (input_number >= 600 && input_number< 799):
+						return "c";
+						break;
+					case (input_number >= 800 && input_number< 999):
+						return "b";
+						break;
+					case (input_number >= 1000 && input_number< 1999):
+						return "a";
+						break;
+					case (input_number >= 2000 && input_number< Infinity):
+						return "s";
+						break;
+					default:
+						break;
+				}
+			}
+			
+			function playSound(name, duration) {
+				let uniqueId = genUID();
+				$("<audio id='"+uniqueId+"'><source src='./audio/"+ name + ".mp3' type='audio/mpeg'></audio>").appendTo("body").get(0).play() && setTimeout(() => $("#"+uniqueId).remove(), duration);
+				return uniqueId;
+			}
+			function genUID(){
+				return `${Date.now() + Math.floor(Math.random() * 1000)}`;
+			}
+		</script>
+	</head>
+	<body onload="initializeSummary()" >
+		<div id="box1"  onmouseenter="m_entered()" onmouseleave="m_leave()">
+			<div id="folder">
+				<div id="photo"><div id="funnyImageWidthPadding"><div id="CommandoImage"></div></div><p id="handwritting">Grebo Sumpsqkwin - Culprit???<br>&nbsp;Seen with 3 accomplices</p></div>
+				<div class="paperclip" id="pc0" ></div>
+				<div id="pc1" class="paperclip"></div>
+				<div id="folderTab"></div>
+				<div class="page" style="transform: rotate(-1deg)"></div>
+				<div class="page" style="transform: rotate(0deg)"></div>
+				<div class="page" style="transform: rotate(1deg)"></div>
+				<div class="page" style="transform: rotate(-2deg)"></div>
+				<div id="printoutPage"><div id="printout"></div></div>
+				<div id="infoPage"><span id="TOPSECRET">TOP SECRET</span><div id="topSecretBorder">
+					<h2>MISSION REPORT</h2>
+					<p>UFOS downed: <span id="heliZone">0</span></p>
+					<p>Greys KIA: <span id="commandoZone">0</span></p>
+					<p>Hits/Shot Fired: <span id="hitsZone">0</span>/<span id="shotsZone">0</span> = <span id="ratioZone">X</span>%</p>
+					<p>Time Defended: <span id="hoursZone">0</span>:<span id="minZone">0</span>:<span id="secondsZone">0</span></p>
+					<p>Total Score: <span id="totalZone"></span></p>
+					<a href="SabotageA.html"><button type="button">RESTART</button></a>
+				</div></div>
+				<div class="stamp"></div>
+			</div>
+		</div>
+	</body>
+</html>

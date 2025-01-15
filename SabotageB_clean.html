@@ -20,13 +20,6 @@
 							background-image: 	url("./images/background.png");
 							transform-style: 	preserve-3d;
 							perspective:		6px;}
-			#foreground {	position:			absolute;
-							top:				467px;
-							left:				0px;
-							width:				800px;
-							height:				114px;
-							z-index:			0;
-							background-image: 	url("./images/foreground.png");}
 			#base {			position: 			absolute;
 							top: 				500px;
 							left: 				340px;
@@ -45,13 +38,6 @@
 							top: 				25px;
 							left: 				0px;
 							z-index: 			1;}
-			#turretShadow {	background-image:	url(./images/turretShadow.png);
-							position: 			absolute;
-							top: 				480px;
-							left: 				350px;
-							width:				100px;
-							height:				100px;
-							z-index: 			2;}
 			#barrel {		position: 			absolute;
 							top: 				0px;
 							left: 				47px;
@@ -123,48 +109,7 @@
 								text-align: 		center;
 								font-size: 			3em;
 								font-family: 		'geo', serif;}
-			#scanlines {			position:			absolute;
-								top:				0px;
-								left:				0px;
-								width:				800px;
-								height:				600px;
-								z-index:			100;
-								pointer-events:	none;
-								background-image:	url("./images/scanlines.png");}
-			#sun {				position:			absolute;
-								top:				463px;
-								left:				604px;
-								width:				19px;
-								height:				19px;
-								z-index:			3;
-								background-image:	url("./images/sun.png");}
-			.debris {			position:			absolute;
-								top:				0px;
-								left:				0px;
-								width:				6px;
-								height:				6px;
-								z-index:			3;}
 			.animated {			background-repeat: no-repeat; }
-			#mothership {		position:			absolute;
-								top:				254px;
-								left:				283px;
-								width:				227px;
-								height:				65px;
-								z-index:			-1;
-								background-image:	url("./images/mothership.png");}
-			.beam {				position:			absolute;
-								top:				0px;
-								left:				0px;
-								width:				4px;
-								height:				100px;
-								background-image: linear-gradient(
-									to bottom,
-									rgb(255, 255, 255) 0%,
-									rgba(255, 255, 255, 0) 100%
-								), url("./images/tractor_beam.png");
-								background-repeat:	repeat-y;
-								opacity: 			0.15;
-								background-repeat:	repeat-y;}
 		</style>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 		<script>
@@ -184,7 +129,6 @@
 			var global_troopaDesinations;
 			var global_troopasInPosition;
 			var global_kills;
-			var global_barrelAngles;
 			var global_parachuteFallRate;
 			var global_start_time;
 			
@@ -197,6 +141,7 @@
 				sessionStorage.setItem("heliKills", 0);
 				sessionStorage.setItem("commadoKills", 0);
 				sessionStorage.setItem("shotsFired", 0);
+				sessionStorage.setItem("timeSpent", 0);
 				
 				$("#gun").css({"left":"350px","top":"455px","transform":"rotateZ(0deg)"});
 				$("#gameOver").css({"left":"50px","top":"130px"});
@@ -220,21 +165,29 @@
 					"KeyA":"none",
 					"KeyD":"none",
 					"Space":"none",
-				};
-				global_barrelAngles = [[-50, -30], [-35, -24], [-25, -18], [-18, -12], [-12, -6], [Infinity, 0]];				
+				};			
 				global_classfunctions =  {  // these are the functions that will be called for every entity that shares a class with the associated key in this list (frequency defined in global_classThresholds)
 					'turret' : function(){  ////////////////// rotateLeft() & rotateRight()
 						if(global_turret_delta != 0) {
 							let currentRotation = parseInt(document.getElementById("gun").style.transform.slice(8)) || 0;
 							$("#gun").css("transform", "rotateZ(" + clamp(currentRotation + global_turret_delta, -50, 50) + "deg)");
 							global_turret_delta = 0;
-							updateBarrelSprite(currentRotation);
 						}
 						$("#turret").val(0);
 					}, 
 					'gun' : function(){ //////////////////////    fireBullet()
 						if ($("#gun").attr("data-status") == "firing" && $(".bullet").length < global_MAXBULLETS && global_gamestate != "over") {
-							createBullet();
+							let newBullet = $("#box1").append("<div class='bullet'></div>").find(".bullet").last();
+							let newAngle = (parseInt(document.getElementById("gun").style.transform.slice(8)) * Math.PI)/180;
+							if (isNaN(newAngle)) newAngle = 0; // Defensive check							
+							$(newBullet).val(global_classThresholds["bullet"]);
+							$(newBullet).attr("data-angle", newAngle);
+							$(newBullet).css({
+								"top": 528 - (76*(Math.cos(newAngle))) + "px", 
+								"left": 397 + (76*(Math.sin(newAngle))) + "px"
+							});
+							global_entity_list.push(newBullet);
+							playSound("bulletSound",3000);
 							$("#gun").val(0);
 							global_points["shotsFired"]++;
 						}
@@ -251,7 +204,7 @@
 						boundsCheck(bullet);
 						checkCollision(bullet)
 					}, 
-					'heli' : function handleChopper(heli) {  ///////////////////// moveChopper1() & moveChopper2() 
+					'heli' : function handleChopper(heli) {  ///////////////////// moveChopperX()
 						switch($(heli).attr("data-status")){
 						case 'preparing': // STARTING FUNCTION, RESET ALL
 							$(heli).val(-4 * ((Math.floor(Math.random()*300)) + 200)); // val is what determines the frequency at which this function gets called. -4 * 200||500
@@ -270,16 +223,18 @@
 							break;
 						case 'starting': // START SOUND
 							if(global_gamestate == "lose" || global_gamestate == "over"){break;}
-							$(heli).attr("data-sound", playSound($(heli).attr("data-direction") == "rightwards" ? "chopper1Sound" : "chopper2Sound", 10000));
-							$(heli).attr("data-status", global_gamestate != "lose" ? "flying" : "stopped");
+							$(heli).attr({
+								"data-sound": playSound($(heli).attr("data-direction") == "rightwards" ? "chopper1Sound" : "chopper2Sound", 10000),
+								"data-status": global_gamestate != "lose" ? "flying" : "stopped"
+							});
 							$(heli).val(0);
 							break;							
 						case 'flying': // MOVE CHOPPER ACROSS THE SCREEN
 							var leftPosition = parseFloat($(heli).css("left"));
 							$(heli).css("left", leftPosition + ($(heli).attr("data-direction") == "rightwards" ? 1.5 : -1.5) + "px");
-							temp1 = Math.abs($(heli).data('jumpPositions')[0] - leftPosition);
-							temp2 = Math.abs($(heli).data('jumpPositions')[1] - leftPosition);
-							temp3 = Math.abs($(heli).data('jumpPositions')[2] - leftPosition);
+							temp1 = Math.abs($(heli).data("jumpPositions")[0] - leftPosition);
+							temp2 = Math.abs($(heli).data("jumpPositions")[1] - leftPosition);
+							temp3 = Math.abs($(heli).data("jumpPositions")[2] - leftPosition);
 							if ((temp1 < 1) || (temp2 < 1) || (temp3 < 1)) { // create a commando
 								createCommando(leftPosition-10, parseFloat($(heli).css("top")));
 							}
@@ -290,12 +245,12 @@
 							break;
 						}
 					}, 
-					'commando' : function(commando){ ///////////////////// moveTrooper1() moveTrooper2() ///-> moves the greys downwards, updates states: "ready">>"chute">>"safe"
-					if($(commando).attr("data-status") == "safe"){return}
-						let commando_column = parseInt($(commando).attr("data-column"));	
+					'commando' : function(commando){ /////////////////////handleCommando()		moves the commandos downwards, changes their states: "ready">>"chute">>"safe"
+						if($(commando).attr("data-status") == "safe"){return}
+						let commando_column = $(commando).attr("data-column");
 						var landing_height = 540;
 						for(safeman of global_entity_list){
-							if( safeman.hasClass("commando") && safeman != commando && $(safeman).attr("data-status") == "safe" && commando_column > parseInt($(safeman).attr("data-column"))-10 && commando_column < parseInt($(safeman).attr("data-column"))+10){
+							if(safeman.hasClass("commando") && $(safeman).attr("data-status") == "safe" && commando_column > $(safeman).attr("data-column")-10 && commando_column < $(safeman).attr("data-column")+10){
 								landing_height = landing_height-30;
 							}
 						}
@@ -315,10 +270,8 @@
 					},
 					'animated' : function(imaged_element){   ///////////////////// moveSprite1() moveSprite2() & bigExplosion()
 						let frameWidth = parseFloat($(imaged_element).attr("data-frame-width"));
-						let totalFrames = parseFloat($(imaged_element).attr("data-total-frames"));
 						let newPosition = parseFloat($(imaged_element).css("background-position")) - frameWidth;						
-						let maxOffset = frameWidth * totalFrames * -1;						
-						if (newPosition <= maxOffset) {
+						if (newPosition <= frameWidth * parseFloat($(imaged_element).attr("data-total-frames")) * -1) {
 							$(imaged_element).attr("data-cycles", parseInt($(imaged_element).attr("data-cycles")) + 1);
 							if (parseInt($(imaged_element).attr("data-cycles")) >= $(imaged_element).attr("data-loop")) {
 								if ($(imaged_element).attr("data-endfunction")) window[$(imaged_element).attr("data-endfunction")](imaged_element);
@@ -354,14 +307,9 @@
 						if(Math.abs(parseInt(troopa.css("left")) - global_troopaDesinations[position]) <=5){
 							global_troopasInPosition++;
 							if(global_troopasInPosition == 4){
-								sessionStorage.setItem("timeSpent", Date.now() - global_start_time); //calculating the time defended here
 								$("#gun").css("visibility","hidden");
 								$("#base").css("visibility","hidden");
 								$("#turretShadow").css("visibility","hidden");
-								$(global_SORTED2.forEach((element)=>{
-									$(element).attr({"class": "commando", "data-status": "ready"});
-									$(element).css({"background-image":"url('./images/commandoCelebrate.png')","background-position":"0px 0px"});
-								}));
 								createExplosion("240px", "340px", "nuke");
 								displayGameOver();
 							}
@@ -408,129 +356,6 @@
 						}
 						troopa.val(0);
 					},
-					'debris' : function(debris){
-						let currentAngle, newAngle; 					
-						switch(debris.attr("data-dType")){
-							case "chopper1":
-								currentAngle = debris.data('rotation');
-								debris.attr("data-dAngleChange", parseFloat(debris.attr("data-dAngleChange")) * 1.005); // accelerate the angle change
-								newAngle = currentAngle + parseFloat(debris.attr("data-dAngleChange"));
-								debris.css({
-									"left": parseFloat(debris.css("left")) + (1+(Math.cos(Math.PI/180 * currentAngle))), 
-									"top": parseFloat(debris.css("top")) + (Math.sin(Math.PI/180 * currentAngle)),
-									"transform": `rotate(${newAngle}deg)`
-								}).data('rotation', newAngle);
-								break;
-							case "chopper2":
-								currentAngle = debris.data('rotation');
-								debris.attr("data-dAngleChange", parseFloat(debris.attr("data-dAngleChange")) * 1.005); // accelerate the angle change
-								newAngle = currentAngle + parseFloat(debris.attr("data-dAngleChange"));
-								debris.css({
-									"left": parseFloat(debris.css("left")) - (1+(Math.cos(Math.PI/180 * currentAngle))), 
-									"top": parseFloat(debris.css("top")) - (Math.sin(Math.PI/180 * currentAngle)),
-									"transform": `rotate(${newAngle}deg)`
-								}).data('rotation', newAngle);
-								break;
-							case "bit":
-								currentAngle = debris.data('rotation');
-								var currentTime = new Date().getUTCMilliseconds();
-								var time = (currentTime - $(debris).attr("data-dTime"))/1000;
-								var angle = $(debris).attr("data-dAng");
-								var velocity = $(debris).attr("data-dVel");
-								var gravity = 2.0;
-								var x = velocity * Math.cos(angle);
-								var y = velocity * Math.sin(angle) - (0.5 * gravity * (time * time));
-								angle = Math.atan2(y, x); // Calculate the new angle
-								velocity = Math.sqrt((x * x) + (y * y)); // Calculate the new velocity
-								newAngle = currentAngle + parseFloat(debris.attr("data-dAngleChange"));
-								$(debris).attr({
-									"data-dTime": currentTime,
-									"data-dAng": angle, // Store the updated angle
-									"data-dVel": velocity // Store the updated velocity
-								}).data('rotation', newAngle)
-								$(debris).css({
-									"top": parseFloat($(debris).css("top")) - y + "px",
-									"left": parseFloat($(debris).css("left")) + x + "px",
-									"transform": `rotate(${newAngle}deg)`
-								});
-								boundsCheck(debris, false);
-								break;
-						}
-						if(debris.attr("data-dAssociate")){
-							$("#"+debris.attr("data-dAssociate")).css({
-								"left":parseFloat(debris.css("left"))+parseFloat($(debris).attr("data-dOffset"))+"px",
-								"top":parseFloat(debris.css("top"))+8+"px", 
-								"transform": currentAngle + parseFloat($("#"+debris.attr("data-dAssociate")).attr("data-explosion-angle"))+"deg"
-							});
-						}
-						debris.val(0);
-					},
-					'mothership' : function(mothership){
-						$(mothership).css("left", (283 + Math.sin(parseInt($(mothership).attr("data-counter")) / 100) * 200) + "px");
-						for(entity of global_entity_list) {
-							if(entity.hasClass("commando")) {            
-								if($(entity).attr("data-status") == "chute") {
-									let hasBeam = false;
-									for(beam of global_entity_list) {
-										if(beam.hasClass("beam")) {
-											if(beam.attr("data-target") == getEntityIndex(entity)) {
-												hasBeam = true;
-												break;
-											}
-										}
-									}            
-									if(!hasBeam) { // If no beam exists for this commando, create one
-										let beam = $("#box1").append("<div class='beam'></div>").find(".beam").last();
-										beam.attr({
-											"data-target": getEntityIndex(entity),
-										});
-										setAnimationData(beam, {
-											"frame-width": 4,
-											"total-frames": 8,
-											"loop": Infinity,
-											"timing": 10
-										});
-									}
-								}
-							}
-						}
-						$(mothership).attr("data-counter", parseInt($(mothership).attr("data-counter")) + 1);
-						$(mothership).val(0);
-					},
-					'beam' : function(beam){
-						let mothershipLeft = parseFloat($(mothership).css("left"))+110;
-						let mothershipTop = parseFloat($(mothership).css("top"))+58;
-						let targetIndex = parseInt($(beam).attr("data-target"));
-						let commandoTarget = null;
-						let currentCommandoIndex = 0;
-						for(let entity of global_entity_list) {
-							if(entity.hasClass("commando")) {
-								if(currentCommandoIndex === targetIndex) {
-									commandoTarget = entity;
-									break;
-								}
-								currentCommandoIndex++;
-							}
-						} if(commandoTarget === null || $(commandoTarget).attr("data-status") !== "chute"){
-							destroyEntity(beam);
-							return;
-						}
-						let commandoLeft = parseFloat(commandoTarget.css("left")) + 10;
-						let commandoTop = parseFloat(commandoTarget.css("top")) + 20;
-						let animationOffset = approximateOffset((parseFloat($(".mothership").attr("data-frame"))/parseFloat($(".mothership").attr("data-total-frames"))));
-						let deltaX = commandoLeft - (mothershipLeft+animationOffset);
-						let deltaY = commandoTop - mothershipTop;
-						let beamHeight = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-						let angle = Math.atan2(deltaY, deltaX) * (180/Math.PI) - 90;
-						$(beam).css({
-							"left": (mothershipLeft+animationOffset) + "px",
-							"top": mothershipTop + "px",
-							"height": beamHeight + "px",
-							"transform-origin": "top",
-							"transform": "rotate(" + (angle) + "deg) "
-						});
-						beam.val(0);
-					}
 				} // end of global_classFunctions
 				
 				global_classThresholds = { // These are the number of ticks between each function call (as defined for entities of a given class in global_classfunctions)
@@ -544,8 +369,6 @@
 					'troopa' : 10,
 					'debris' : 4,
 					'animated' : 0,
-					'mothership' : 20,
-					'beam' : 0
 				}; // end of global_classThresholds
 
 				for(var i=0; i<global_MAXheliCount; i++){ //////////////////////////////////  CREATE HELICOPTERS		
@@ -566,14 +389,8 @@
 				
 				$("#turret").val(global_classThresholds["turret"]);
 				$("#gun").val(global_classThresholds["gun"]);
-				$("#mothership").val(global_classThresholds["mothership"]);
-				$("#mothership").attr("data-counter", 0);
 				document.addEventListener("keydown", (event) => handleInputsEvents(event));
 				document.addEventListener("keyup", (event) => handleInputsEvents(event));
-				
-				setAnimationData($("#scanlines"), {	"frame-width": 800, "total-frames": 6, "loop": Infinity, "timing": 100 });
-				setAnimationData($("#sun"), { "frame-width": 19, "total-frames": 8, "loop": Infinity, "timing": 80 });
-				setAnimationData($("#mothership"), { "frame-width": 227, "total-frames": 18, "loop": Infinity, "timing": 200 });
 			} // end of init
 			
 			function handleInputsEvents(event){ // takes input events from the Event Listeners and parses them into the global_inputs_array
@@ -655,7 +472,7 @@
 
 			function playSound(name, duration) {
 				let uniqueId = genUID();
-				$("<audio id='"+uniqueId+"'><source src='./audio/"+name+".mp3' type='audio/mpeg'></audio>").appendTo("body").get(0).play() && setTimeout(() => $("#"+uniqueId).remove(), duration);
+				$("<audio id='"+uniqueId+"'><source src='./audio/"+ name + ".mp3' type='audio/mpeg'></audio>").appendTo("body").get(0).play() && setTimeout(() => $("#"+uniqueId).remove(), duration);
 				return uniqueId;
 			}		
 
@@ -669,20 +486,6 @@
 				}
 				return null; // Return null if entity is not found
 			}
-
-			function createBullet(){
-				let newBullet = $("#box1").append("<div class='bullet'></div>").find(".bullet").last();
-				let newAngle = (parseInt(document.getElementById("gun").style.transform.slice(8)) * Math.PI)/180;
-				if (isNaN(newAngle)) newAngle = 0; // Defensive check							
-				newBullet.val(global_classThresholds["bullet"]);
-				global_entity_list.push(newBullet);
-				$(newBullet).attr("data-angle", newAngle);
-				$(newBullet).css({
-					"top": 528 - (76*(Math.cos(newAngle))) + "px", 
-					"left": 397 + (76*(Math.sin(newAngle))) + "px"
-				});
-				playSound("bulletSound",3000);
-			}
 			
 			function createCommando(leftPosition, topPosition){ // assuming floats for leftPosition and topPosition
 				global_COMMANDOCOUNT++;
@@ -694,62 +497,12 @@
 			}
 
 			function createExplosion(leftPosition, topPosition , type="chopper", angle=0) { // assuming strings for leftPosition and topPosition
-				(type != "debris"&&type!="boom")?playSound(type=="nuke"?"bigExplode":"chopperExplode", 6000) : false;
+				playSound(type=="nuke"?"bigExplode":"chopperExplode", 6000);
 				let explosion =  $("#box1").append("<div class='explosion'></div>").find(".explosion").last();
-				(type=="nuke"||type=="boom")?$(explosion).css("background-image","url('./images/"+(type=="boom"?"boom":"nukeSprite")+".png')"):false;
-				type=="nuke"?$(explosion).css({"width":"320px","height":"230px"}):false;
+				type=="nuke"?$(explosion).css({"background-image":"url('./images/nukeSprite.png')","width":"320px","height":"230px"}):false;
 				$(explosion).css({"left":leftPosition,"top":topPosition,"transform":"rotate("+angle+"deg)"});
-				setAnimationData(explosion, { "frame-width": type=="nuke"?320:64, "total-frames": type=="nuke"?25:(type=="boom"?11:13), "loop": 1, "timing": 20 });
+				setAnimationData(explosion, { "frame-width": type=="nuke"?320:64, "total-frames": type=="nuke"?25:13, "loop": 1, "timing": 20 });
 				global_entity_list.push(explosion);
-				explosion.attr({
-					"id": genUID(),
-					"data-explosion-angle": angle
-				});
-				return explosion.attr("id");
-			}
-
-			function createDebris(leftPosition, topPosition, type, associate=null, offset=0, parent="chopper1"){ // assuming floats for leftPosition and topPosition
-				let debris = $("#box1").append("<div class='debris'></div>").find(".debris").last();
-				debris.css({"background-image":"url('./images/" + (type == "chopper1" || type == "chopper2" ? type+"_splodin":getDebrisURL(parent)) + ".png')"});
-				debris.css({
-					"left": leftPosition+"px",
-					"top": topPosition+"px",
-					"transform": "rotate(0deg)",
-					"width": type == "chopper1" || type == "chopper2" ? "120px" : "32px",
-					"height": type == "chopper1" || type == "chopper2" ? "80px" : "32px"
-				}).data('rotation', 0);  // Initialize rotation data				
-				debris.attr({
-					"data-dType": type, 
-					"data-dAngleChange": type == "chopper1" || type == "chopper2" ? (Math.random() * 2 - 1) : (Math.random() * 20) -10,
-					"data-dAssociate": associate,
-					"data-dhoriz": 0,
-					"data-dAng": Math.random() * 2 * Math.PI, // Set to a random angle in radians
-					"data-dVel": Math.floor(Math.random()*10),
-					"data-dTime": new Date().getUTCMilliseconds(),
-					"data-dOffset": offset,
-				});
-				debris.val(0);
-				setAnimationData(debris, {
-					"frame-width": type == "chopper1" || type == "chopper2" ? 120 : 32,
-					"total-frames": type == "chopper1" || type == "chopper2" ? 7 : 8,
-					"loop": type == "chopper1" || type == "chopper2" ? 1 : Infinity,
-					"timing": 40,
-					"endfunction": type == "chopper1" || type == "chopper2" ? "chopperDebrisEndFunction" : null
-				});
-			}
-
-			function getDebrisURL(type){
-				 return (type=="chopper2"?"debris1_":"debris0_")+Math.floor(Math.random()*3);
-			}
-
-			function chopperDebrisEndFunction(debris){
-				createExplosion($(debris).css("left"), $(debris).css("top"), "boom", 0);
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
-				createDebris(parseInt($(debris).css("left")), parseInt($(debris).css("top")), "bit", null, null, $(debris).attr("data-dType"));
 			}
 			
 			function destroyEntity(entity){
@@ -774,24 +527,14 @@
 				let bullTop = parseInt(bullet.css("top"));
 				let bullLeft = parseInt(bullet.css("left"));
 				for(entity of global_entity_list){
-					if($(entity).hasClass("bullet") || $(entity).hasClass("turret") || $(entity).hasClass("gun")){
+					if($(entity).hasClass("bullet") || $(entity).hasClass("turret") || $(entity).hasClass("gun") || $(entity).hasClass("barrel") || $(entity).hasClass("explosion")){
 						continue; //bullets cannot collide with themselves, nor the gun they're fired from :^)
 					}
 					var entTop = parseInt(entity.css("top"));
 					var entLeft = parseInt(entity.css("left"));
-					let bulletLeft = parseFloat($(bullet).css("left"));
-					let direction = $(entity).attr("data-direction");
-					let offset = direction=="rightwards"?(bulletLeft - entLeft)-10:(bulletLeft - entLeft);
 					if($(entity).hasClass("heli") && $(entity).attr("data-status") == "flying" && bullTop < entTop+40 && bullTop > entTop && bullLeft >= entLeft && bullLeft < entLeft + 80){
 						$("#scoreValue").html(parseInt($("#scoreValue").html(),10)+25);
-						createDebris( // the burning wreck before its detonation is a debris
-							direction == "rightwards" ? parseFloat($(entity).css("left"))+10 : parseFloat($(entity).css("left"))-10,
-							parseFloat($(entity).css("top"))-15, 
-							direction == "rightwards" ? "chopper1" : "chopper2",
-							createExplosion(direction == "rightwards" ? parseFloat($(entity).css("left"))+offset+40+"px" : 
-							parseFloat($(entity).css("left"))+offset+"px", $(entity).css("top"), false, 70 * $(bullet).attr("data-bullet-angle")),
-							offset
-						);
+						createExplosion(bullLeft+20+"px", bullTop-10+"px", "chopper", 0);
 						$(entity).attr("data-status", "preparing");	//change the heli to preparing, to wait again before showing up
 						$(entity).val(0);													//reset the heli timer 
 						destroyEntity(bullet);
@@ -803,18 +546,14 @@
 						destroyEntity(entity);
 						playSound("commandoshot", 600);
 						global_points["commandos"]++;
-					} else if($(entity).hasClass("debris") && $(entity).attr("data-dType") == "bit" && bullTop < entTop+5 && bullTop > entTop && bullLeft >= entLeft && bullLeft < entLeft + 5){
-						$(bullet).attr("data-bullet-angle", $(bullet).attr("data-bullet-angle") + (Math.floor((Math.random() * 5) - 2.5)));
-						destroyEntity(entity);
-						createDebris(entLeft, entTop, "bit");
-					}
+					} 
 				}
 			}					
 			
 			function boundsCheck(entity, checkTop=true){
 				var bulletTop = parseFloat($(entity).css("top")); 
 				var bulletLeft = parseFloat($(entity).css("left"));
-				if ((checkTop && (bulletTop < 0)) || bulletTop > 600 || bulletLeft < 0 || bulletLeft > 800){
+				if (checkTop && (bulletTop < 0) || bulletTop > 600 || bulletLeft < 0 || bulletLeft > 800){
 					destroyEntity(entity);	
 				}
 			}
@@ -854,19 +593,9 @@
 					return distA - distB;
 				});
 				for(var i=0;i<global_SORTED2.length;i++){
-					if(i <= 3){
-						global_SORTED2[i].attr({"class":"troopa","value":0,"id":i}); // then change their class to troopa which will be animated assaulting the gun
-					} else {
-						global_SORTED2[i].attr({"class":"commando","value":0,"id":i}); 
-					}
+					$(global_SORTED2[i]).attr({"class":"troopa","value":0,"id":i}); // then change their class to troopa which will be animated assaulting the gun
 				}
 				global_troopaDesinations = new Array(side=="right"?460:320, side=="right"?460:320, side=="right"?480:300, side=="right"?440:340);
-				for(commando of global_entity_list){
-					if(commando.hasClass("commando") != true){continue};
-					commando.css({"background-image":"url('./images/commandoCelebrate.png')","background-position":"0px 0px"});
-					setAnimationData(commando, { "frame-width": 20, "total-frames": 2, "loop": Infinity, "timing": 60 });
-					$(commando).attr({"data-joffset": Math.floor(Math.random()*20), "data-counter":0});
-				}
 			}
 
 			function displayGameOver() {
@@ -876,33 +605,16 @@
 				sessionStorage.setItem("heliKills", global_points["helis"]);
 				sessionStorage.setItem("commandoKills", global_points["commandos"]);
 				sessionStorage.setItem("shotsFired", global_points["shotsFired"]);
+				sessionStorage.setItem("timeSpent", Date.now() - global_start_time);
 				setTimeout (function(){	window.location.href = "./SabotageC.html"}, 8000);
-			}
-
-			function updateBarrelSprite(rotation) {
-				for (let [angle, position] of global_barrelAngles) {
-					if (rotation <= angle) {
-						$("#barrel").css("background-position", position + "px");
-						break;
-					}
-				}
-			}
-
-			function approximateOffset(x) {
-				return Math.cos(x * Math.PI/1 + 0.9) * 31;
 			}
 		</script>
 	</head>
 	<body>
 		<div id="box1">
-			<div id="scanlines"></div>
-			<div id="foreground"></div>
 			<div id="border"></div>
 			<div id="base"></div>
-			<div id="sun"></div>
-			<div id="mothership" class="mothership"></div>
 			<div id="ground"></div>
-			<div id="turretShadow"></div>
 			<div id="gun" class="gun" value="0">
 				<div id="turret" class="turret" value="0">
 					<img src="./images/turret.png" />
